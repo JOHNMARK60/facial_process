@@ -1,0 +1,21 @@
+services:
+  face:
+    build: .
+    restart: unless-stopped
+    environment:
+      APP_ENV: production
+      FACE_SERVICE_API_KEY: ${FACE_SERVICE_API_KEY:?Set the same face API key as Laravel}
+      FACE_BIND_HOST: 0.0.0.0
+      PORT: "8001"
+    expose:
+      - "8001"
+    volumes:
+      - face_models:/home/face/.insightface
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  face_models:

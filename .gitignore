@@ -6,6 +6,9 @@ __pycache__/
 .mypy_cache/
 .idea/
 .vscode/
+.env
+.env.*
+!.env.example
 data/
 *.onnx
 *.bin

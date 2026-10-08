@@ -7,10 +7,13 @@ database storage, duplicate checks, and attendance decisions.
 """
 
 from contextlib import asynccontextmanager
+import os
+import secrets
+from typing import Annotated
 
 import cv2
 import numpy as np
-from fastapi import FastAPI, File, UploadFile
+from fastapi import Depends, FastAPI, File, Header, HTTPException, UploadFile
 from fastapi.responses import JSONResponse
 from insightface.app import FaceAnalysis
 
@@ -22,6 +25,8 @@ face_analyzer: FaceAnalysis | None = None
 async def lifespan(_: FastAPI):
     """Load the CPU ArcFace pipeline once when the service starts."""
     global face_analyzer
+    if os.getenv("APP_ENV", "local") == "production" and not os.getenv("FACE_SERVICE_API_KEY", "").strip():
+        raise RuntimeError("FACE_SERVICE_API_KEY is required in production.")
     face_analyzer = FaceAnalysis(
         name="buffalo_l",
         providers=["CPUExecutionProvider"],
@@ -51,7 +56,20 @@ async def health() -> dict[str, str]:
     return {"status": "ok", "message": "Face service is running"}
 
 
-@app.post("/extract-embedding")
+async def require_api_key(
+    x_api_key: Annotated[str | None, Header()] = None,
+) -> None:
+    """Accept the shared key sent by Laravel; allow keyless local development."""
+    expected = os.getenv("FACE_SERVICE_API_KEY", "").strip()
+    if not expected:
+        if os.getenv("APP_ENV", "local") == "production":
+            raise HTTPException(status_code=503, detail="Face service API key is not configured.")
+        return
+    if not secrets.compare_digest((x_api_key or "").encode(), expected.encode()):
+        raise HTTPException(status_code=401, detail="Invalid face service API key.")
+
+
+@app.post("/extract-embedding", dependencies=[Depends(require_api_key)])
 async def extract_embedding(image: UploadFile = File(...)):
     """Detect exactly one face and return a normalized ArcFace embedding."""
     if face_analyzer is None:
