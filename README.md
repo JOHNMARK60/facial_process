@@ -24,12 +24,14 @@ Internet access is therefore needed for that initial startup.
 python app.py
 ```
 
-The runner loads `.env` and defaults to `127.0.0.1:8001` for local use.
+The runner loads `.env` and defaults to `0.0.0.0:8001` so it can be reached by
+Laravel, Docker, or another device on the network. Set
+`FACE_BIND_HOST=127.0.0.1` for localhost-only access.
 Set `FACE_SERVICE_API_KEY` to the same value as in Laravel. Flutter calls Laravel;
 Laravel sends the shared key in `X-API-Key` when requesting an embedding.
 
 For local development with automatic reload, use
-`uvicorn main:app --env-file .env --host 127.0.0.1 --port 8001 --reload`.
+`uvicorn main:app --env-file .env --host 0.0.0.0 --port 8001 --reload`.
 
 ## Hostinger VPS / Dokploy
 

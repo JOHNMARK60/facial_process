@@ -14,6 +14,9 @@ from main import app
 if __name__ == "__main__":
     uvicorn.run(
         app,
-        host=os.getenv("FACE_BIND_HOST", "127.0.0.1"),
+        # Bind to all interfaces so the service is reachable from Docker,
+        # Laravel, or another device on the local network. Override with
+        # FACE_BIND_HOST=127.0.0.1 when localhost-only access is preferred.
+        host=os.getenv("FACE_BIND_HOST", "0.0.0.0"),
         port=int(os.getenv("PORT", "8001")),
     )

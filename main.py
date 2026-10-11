@@ -43,6 +43,17 @@ app = FastAPI(
 )
 
 
+@app.get("/")
+async def root() -> dict[str, str]:
+    """Provide a useful response when the service base URL is opened."""
+    return {
+        "service": "CampusHub Face Embedding Service",
+        "status": "ok",
+        "health": "/health",
+        "docs": "/docs",
+    }
+
+
 def error_response(message: str, status_code: int = 422) -> JSONResponse:
     return JSONResponse(
         status_code=status_code,
